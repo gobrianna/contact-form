@@ -1,31 +1,36 @@
-const form = document.querySelector("form");
+const form = document.getElementById("contactForm") as HTMLFormElement;
 
-form?.addEventListener("submit", (e) => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const visitorName = document.querySelector<HTMLInputElement>("#name")!;
-  const email = document.querySelector<HTMLInputElement>("#email")!;
-  const message = document.querySelector<HTMLTextAreaElement>("#message")!;
+  const formData = new FormData(form);
+  const data = {
+    name: formData.get("name"),
+    email: formData.get("email"),
+    message: formData.get("message"),
+  };
 
-  const errors: string[] = [];
+  try {
+    const response = await fetch(
+      "https://hiw4wtnkqg.execute-api.us-east-1.amazonaws.com/submit",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "applicaton/json",
+        },
+        body: JSON.stringify(data),
+      }
+    );
 
-  if (!visitorName.value.trim()) {
-    errors.push("Enter your name.");
+    const result = await response.json();
+
+    if (response.ok) {
+      alert("Message sent.");
+    } else {
+      alert(`Error: ${result.error}`);
+    }
+  } catch (error) {
+    console.error("Request failed", error);
+    alert("Something went wrong. Please try again later.");
   }
-
-  if (!email.value.trim()) {
-    errors.push("Enter your e-mail address.");
-  }
-
-  if (!message.value.trim()) {
-    errors.push("Type a message.");
-  }
-
-  if (errors.length > 0) {
-    alert("Looks like you forgot something:\n\n" + errors.join("\n"));
-    return;
-  }
-
-  alert("TypeScript:\nForm has been successfully submitted.");
-  form.reset();
 });
