@@ -11,7 +11,20 @@ kms = boto3.client("kms")
 TABLE_NAME = os.environ.get("TABLE_NAME")
 KMS_KEY_ID = os.environ.get("KMS_KEY_ID")
 
+cors_headers = {
+    "Access-Control-Allow-Origin": "https://d3um4w745sq9lj.cloudfront.net",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "POST,OPTIONS"
+}
+
 def lambda_handler(event, context):
+    if event.get("httpMethod") == "OPTIONS":
+        return {
+            "statusCode": 200,
+            "headers": cors_headers,
+            "body": json.dumps({"message": "CORS preflight OK"})
+        }
+
     try:
         # parses incoming request body
         body = json.loads(event.get("body", "{}"))
@@ -23,6 +36,7 @@ def lambda_handler(event, context):
         if not name or not email or not message:
             return {
                 "statusCode": 400,
+                "headers": cors_headers,
                 "body": json.dumps({"error": "All fields are required."})
             }
 
@@ -37,6 +51,7 @@ def lambda_handler(event, context):
             print(f"KMS Error: {e}")
             return {
                 "statusCode": 500,
+                "headers": cors_headers,
                 "body": json.dumps({"error": "Encryption failed."})
             }
 
@@ -52,12 +67,14 @@ def lambda_handler(event, context):
             print(f"DynamoDB Error: {e}")
             return {
                 "statusCode": 500,
+                "headers": cors_headers,
                 "body": json.dumps({"error": "Database write failed."})
             }
 
         # returns success reponse after data is stored
         return {
             "statusCode": 200,
+            "headers": cors_headers,
             "body": json.dumps({"message": "Form submitted securely."})
         }
 
@@ -66,5 +83,6 @@ def lambda_handler(event, context):
         print(f"Unexpected Error: {e}")
         return {
             "statusCode": 500,
+            "headers": cors_headers,
             "body": json.dumps({"error": "Unexpected error occurred."})
         }
